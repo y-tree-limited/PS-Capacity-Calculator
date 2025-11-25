@@ -12,7 +12,8 @@
             --warning: #ca8a04;
             --project: #8b5cf6; 
             --admin: #64748b; 
-            --mentor: #06b6d4;
+            --mentor: #06b6d4; 
+            --buffer: #a8a29e;
             --bg: #f3f4f6;
             --card: #ffffff;
         }
@@ -59,7 +60,7 @@
             box-sizing: border-box;
         }
         
-        /* Checkbox Styling */
+        /* Checkbox Group Styling */
         .checkbox-group {
             display: flex;
             align-items: center;
@@ -69,9 +70,44 @@
             margin-bottom: 12px;
             cursor: pointer;
             transition: background 0.2s;
+            background: white;
         }
         .checkbox-group:hover { background: #f9fafb; }
         .checkbox-group input { margin-right: 12px; width: 20px; height: 20px; }
+        
+        /* Compound Group for Settings */
+        .compound-group {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .compound-group .checkbox-group {
+            border: none;
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+        .compound-settings {
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            padding: 10px 15px;
+            display: none; /* Hidden by default */
+        }
+        .compound-settings .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .compound-settings label {
+            margin: 0;
+            font-weight: 500;
+            color: #4b5563;
+        }
+        .compound-settings input[type="number"] {
+            width: 80px;
+            padding: 6px;
+            text-align: right;
+        }
         
         /* Result Styling */
         .result-header {
@@ -108,6 +144,16 @@
         .segment {
             height: 100%;
             transition: width 0.5s ease;
+        }
+        /* Striped pattern for buffer */
+        .segment-buffer {
+            background-image: repeating-linear-gradient(
+                45deg,
+                #d6d3d1,
+                #d6d3d1 10px,
+                #e7e5e4 10px,
+                #e7e5e4 20px
+            );
         }
         
         /* Legend */
@@ -148,13 +194,13 @@
 
 <div class="header">
     <h1>Platform Team Capacity Planner</h1>
-    <p>Calculate "Spare Capacity" after deducting Rota, Walk-ups, Mentoring & Meetings</p>
+    <p>Calculate "Deep Work" availability with adjustable commitments & safety buffers</p>
 </div>
 
 <div class="calculator-grid">
     <!-- Input Section -->
     <div class="card">
-        <h2>1. Role & Environment</h2>
+        <h2>1. Role & Policy</h2>
         
         <div class="input-group">
             <label>Team Member Name</label>
@@ -162,7 +208,7 @@
         </div>
 
         <div class="input-group">
-            <label>Weekly Available Hours</label>
+            <label>Weekly Contract Hours</label>
             <input type="number" id="totalHours" value="35" oninput="calculate()">
         </div>
 
@@ -177,39 +223,92 @@
             <input type="number" id="meetingHours" value="5" oninput="calculate()">
         </div>
 
+        <!-- Buffer Section -->
+        <div class="compound-group">
+            <label class="checkbox-group">
+                <input type="checkbox" id="useBuffer" checked onchange="calculate()">
+                <div style="flex-grow: 1;">
+                    <strong>Reserve Capacity Buffer</strong>
+                    <div style="font-size: 12px; color: #666;">Prevent 100% booking (Default 15%)</div>
+                </div>
+            </label>
+            <div id="bufferSettings" class="compound-settings" style="display: block;">
+                <div class="setting-row">
+                    <label>Buffer %:</label>
+                    <input type="number" id="bufferPercent" value="15" min="0" max="50" oninput="calculate()">
+                </div>
+            </div>
+        </div>
+
         <h3>2. Commitments</h3>
         
-        <label class="checkbox-group">
-            <input type="checkbox" id="supportRota" onchange="calculate()">
-            <div>
-                <strong>Active Support Rota</strong>
-                <div style="font-size: 12px; color: #666;">Dedicated Ticket Duty (Reserves 20h)</div>
+        <!-- Support Rota -->
+        <div class="compound-group">
+            <label class="checkbox-group">
+                <input type="checkbox" id="supportRota" onchange="calculate()">
+                <div style="flex-grow: 1;">
+                    <strong>Active Support Rota</strong>
+                    <div style="font-size: 12px; color: #666;">Dedicated Ticket Duty</div>
+                </div>
+            </label>
+            <div id="rotaSettings" class="compound-settings">
+                <div class="setting-row">
+                    <label>Rota Hours:</label>
+                    <input type="number" id="rotaHourValue" value="20" oninput="calculate()">
+                </div>
             </div>
-        </label>
+        </div>
 
-        <label class="checkbox-group">
-            <input type="checkbox" id="escalationPoint" onchange="calculate()">
-            <div>
-                <strong>Escalation Point / Mentor</strong>
-                <div style="font-size: 12px; color: #666;">Technical Assist, Training & Emergencies (Reserves 5h)</div>
+        <!-- Escalation/Mentor -->
+        <div class="compound-group">
+            <label class="checkbox-group">
+                <input type="checkbox" id="escalationPoint" onchange="calculate()">
+                <div style="flex-grow: 1;">
+                    <strong>Escalation Point / Mentor</strong>
+                    <div style="font-size: 12px; color: #666;">Technical Assist & Training</div>
+                </div>
+            </label>
+            <div id="mentorSettings" class="compound-settings">
+                <div class="setting-row">
+                    <label>Mentor Hours:</label>
+                    <input type="number" id="mentorHourValue" value="5" oninput="calculate()">
+                </div>
             </div>
-        </label>
+        </div>
 
-        <label class="checkbox-group">
-            <input type="checkbox" id="mgmtOverhead" onchange="calculate()">
-            <div>
-                <strong>Management / Lead Duties</strong>
-                <div style="font-size: 12px; color: #666;">Hiring, Reports, Strategy (Reserves 10h)</div>
+        <!-- Management -->
+        <div class="compound-group">
+            <label class="checkbox-group">
+                <input type="checkbox" id="mgmtOverhead" onchange="calculate()">
+                <div style="flex-grow: 1;">
+                    <strong>Management / Lead Duties</strong>
+                    <div style="font-size: 12px; color: #666;">Hiring, Reports, Strategy</div>
+                </div>
+            </label>
+            <div id="mgmtSettings" class="compound-settings">
+                <div class="setting-row">
+                    <label>Mgmt Hours:</label>
+                    <input type="number" id="mgmtHourValue" value="10" oninput="calculate()">
+                </div>
             </div>
-        </label>
+        </div>
 
-        <label class="checkbox-group">
-            <input type="checkbox" id="assignedProject" onchange="calculate()">
-            <div>
-                <strong>Assigned Project Owner</strong>
-                <div style="font-size: 12px; color: #666;">Leading a project (Reserves 15h)</div>
+        <!-- Project -->
+        <div class="compound-group">
+            <label class="checkbox-group">
+                <input type="checkbox" id="assignedProject" onchange="calculate()">
+                <div style="flex-grow: 1;">
+                    <strong>Assigned Project Owner</strong>
+                    <div style="font-size: 12px; color: #666;">Leading a project</div>
+                </div>
+            </label>
+            <div id="projectSettings" class="compound-settings">
+                <div class="setting-row">
+                    <label>Project Hours:</label>
+                    <input type="number" id="projectHourValue" value="15" oninput="calculate()">
+                </div>
             </div>
-        </label>
+        </div>
 
     </div>
 
@@ -233,9 +332,10 @@
             <div class="progress-bg">
                 <div id="barAdmin" class="segment" style="background: #64748b; width: 0%"></div> <!-- Grey -->
                 <div id="barSupport" class="segment" style="background: #ef4444; width: 0%"></div> <!-- Red -->
-                <div id="barMentor" class="segment" style="background: #06b6d4; width: 0%"></div> <!-- Cyan (Mentor) -->
+                <div id="barMentor" class="segment" style="background: #06b6d4; width: 0%"></div> <!-- Cyan -->
                 <div id="barMgmt" class="segment" style="background: #f59e0b; width: 0%"></div> <!-- Orange -->
                 <div id="barProject" class="segment" style="background: #8b5cf6; width: 0%"></div> <!-- Purple -->
+                <div id="barBuffer" class="segment segment-buffer" style="width: 0%"></div> <!-- Striped Buffer -->
             </div>
         </div>
 
@@ -245,6 +345,7 @@
             <div class="legend-item"><div class="dot" style="background: #06b6d4;"></div>Mentor & Escalations</div>
             <div class="legend-item"><div class="dot" style="background: #f59e0b;"></div>Management</div>
             <div class="legend-item"><div class="dot" style="background: #8b5cf6;"></div>Project Work</div>
+            <div class="legend-item"><div class="dot segment-buffer" style="border: 1px solid #ccc;"></div>Safety Buffer</div>
         </div>
 
         <div id="warningBox" class="warning-box">
@@ -253,7 +354,7 @@
         </div>
 
         <div id="projectNote" class="note" style="display:none;">
-            ✅ <strong>Safe:</strong> You have spare hours available.
+            ✅ <strong>Safe:</strong> You are within your booking limits.
         </div>
 
     </div>
@@ -270,29 +371,58 @@
         const isEscalation = document.getElementById('escalationPoint').checked;
         const isMgmt = document.getElementById('mgmtOverhead').checked;
         const hasProject = document.getElementById('assignedProject').checked;
+        const useBuffer = document.getElementById('useBuffer').checked;
+
+        // Toggle Visibility of Settings
+        document.getElementById('rotaSettings').style.display = onRota ? 'block' : 'none';
+        document.getElementById('mentorSettings').style.display = isEscalation ? 'block' : 'none';
+        document.getElementById('mgmtSettings').style.display = isMgmt ? 'block' : 'none';
+        document.getElementById('projectSettings').style.display = hasProject ? 'block' : 'none';
+        document.getElementById('bufferSettings').style.display = useBuffer ? 'block' : 'none';
 
         // Update Slider Label
         document.getElementById('daysValue').innerText = daysInOffice + (daysInOffice === 1 ? " day" : " days");
 
-        // 2. Define Constants
+        // 2. Constants & Variables
         const BASE_SHRINKAGE = 2.5; // 30 mins/day fixed tax
         
-        // Logic breakdown
-        const ROTA_HOURS = onRota ? 20 : 0; 
-        const WALKUP_HOURS = daysInOffice * 1; 
-        const MENTOR_HOURS = isEscalation ? 5 : 0; // New Escalation tax
-        const MGMT_HOURS = isMgmt ? 10 : 0; 
-        const PROJECT_HOURS = hasProject ? 15 : 0; 
+        // --- Granular Inputs ---
         
+        // Rota Logic: Base adjustable hours + Walkup Tax
+        const rotaBase = onRota ? (parseFloat(document.getElementById('rotaHourValue').value) || 0) : 0;
+        const walkupTax = daysInOffice * 1; 
+        const supportTotal = rotaBase + walkupTax;
+
+        // Mentor Logic
+        const mentorBase = isEscalation ? (parseFloat(document.getElementById('mentorHourValue').value) || 0) : 0;
+        
+        // Mgmt Logic
+        const mgmtBase = isMgmt ? (parseFloat(document.getElementById('mgmtHourValue').value) || 0) : 0;
+
+        // Project Logic
+        const projectBase = hasProject ? (parseFloat(document.getElementById('projectHourValue').value) || 0) : 0;
+
+        // Buffer Logic
+        let bufferHours = 0;
+        if (useBuffer) {
+            const bufferPct = parseFloat(document.getElementById('bufferPercent').value) || 0;
+            bufferHours = totalHours * (bufferPct / 100);
+        }
+
         // 3. Calculate Usage
         let usedAdmin = BASE_SHRINKAGE + meetingHours;
-        let usedSupport = ROTA_HOURS + WALKUP_HOURS;
-        let usedMentor = MENTOR_HOURS;
-        let usedMgmt = MGMT_HOURS;
-        let usedProject = PROJECT_HOURS;
+        let usedSupport = supportTotal;
+        let usedMentor = mentorBase;
+        let usedMgmt = mgmtBase;
+        let usedProject = projectBase;
         
-        let totalUsed = usedAdmin + usedSupport + usedMentor + usedMgmt + usedProject;
-        let remaining = totalHours - totalUsed;
+        // Total "Work" (excluding buffer)
+        let workTotal = usedAdmin + usedSupport + usedMentor + usedMgmt + usedProject;
+        
+        // Total including buffer for capacity check
+        let grandTotal = workTotal + bufferHours;
+        
+        let remaining = totalHours - grandTotal;
 
         // 4. Update UI - Numbers
         const remainingEl = document.getElementById('remainingHours');
@@ -302,17 +432,21 @@
         const projectNote = document.getElementById('projectNote');
 
         if (remaining < 0) {
-            remainingEl.innerText = remaining + "h";
+            remainingEl.innerText = remaining.toFixed(1) + "h";
             remainingEl.className = "big-number negative";
             badge.style.background = "#fee2e2";
             badge.style.color = "#991b1b";
             badge.innerText = "Over Capacity";
             
             warningBox.style.display = "block";
-            warningText.innerText = "This schedule requires " + totalUsed + " hours. You are in deficit.";
+            let msg = "You are booked for " + workTotal.toFixed(1) + "h work";
+            if(useBuffer) msg += " + " + bufferHours.toFixed(1) + "h buffer";
+            msg += ". Total: " + grandTotal.toFixed(1) + "h.";
+            warningText.innerText = msg;
+            
             projectNote.style.display = "none";
         } else {
-            remainingEl.innerText = remaining + "h";
+            remainingEl.innerText = remaining.toFixed(1) + "h";
             remainingEl.className = "big-number positive";
             badge.style.background = "#dcfce7";
             badge.style.color = "#166534";
@@ -327,14 +461,16 @@
         const pMentor = (usedMentor / totalHours) * 100;
         const pMgmt = (usedMgmt / totalHours) * 100;
         const pProject = (usedProject / totalHours) * 100;
+        const pBuffer = (bufferHours / totalHours) * 100;
 
         document.getElementById('barAdmin').style.width = pAdmin + "%";
         document.getElementById('barSupport').style.width = pSupport + "%";
         document.getElementById('barMentor').style.width = pMentor + "%";
         document.getElementById('barMgmt').style.width = pMgmt + "%";
         document.getElementById('barProject').style.width = pProject + "%";
+        document.getElementById('barBuffer').style.width = pBuffer + "%";
         
-        document.getElementById('totalUsedLabel').innerText = Math.min(totalUsed, totalHours) + "/" + totalHours + "h";
+        document.getElementById('totalUsedLabel').innerText = Math.min(grandTotal, totalHours).toFixed(1) + "/" + totalHours + "h";
     }
 
     // Run on load
